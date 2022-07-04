@@ -1,0 +1,16 @@
+# Self-hosted
+autodiscover: true
+autodiscoverFilter: "!/.*Mirror/.+/"
+
+# Repository
+automerge: true
+commitBodyTable: true
+configMigration: true
+dependencyDashboard: true
+gitLabIgnoreApprovals: true
+
+hostRules:
+  - enableHttp2: true
+lockFileMaintenance:
+  enabled: true
+platformAutomerge: true

@@ -1,0 +1,26 @@
+name: Renovate
+
+on:
+  schedule:
+    - cron: 07 * * * *
+
+  workflow_dispatch:
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    container: renovate/renovate:latest
+    steps:
+      - name: Load config
+        run: curl https://raw.githubusercontent.com/Apocalypsor/Gitea-Sync/main/.github/renovate/config.yaml > /tmp/config.yaml
+      - name: Self-hosted Renovate
+        run: renovate
+        env:
+          RENOVATE_USERNAME: ${{ secrets.RENOVATE_USERNAME }}
+          RENOVATE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
+          RENOVATE_ENDPOINT: ${{ secrets.RENOVATE_ENDPOINT }}
+          RENOVATE_GIT_AUTHOR: ${{ secrets.RENOVATE_GIT_AUTHOR }}
+          RENOVATE_PLATFORM: gitea
+          RENOVATE_GIT_URL: endpoint
+          RENOVATE_USER_AGENT: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36
+          RENOVATE_CONFIG_FILE: /tmp/config.yaml
