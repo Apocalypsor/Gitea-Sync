@@ -29,6 +29,6 @@ jobs:
       - name: Clean
         env:
           GITHUB_REPO: ${{ github.repository }}
-          GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           EXPIRE_TIME: '0h'
         run: python run.py
