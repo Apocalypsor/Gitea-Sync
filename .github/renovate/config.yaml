@@ -1,6 +1,7 @@
 # Self-hosted
 autodiscover: true
 autodiscoverFilter: "!/.*Mirror/.+/"
+logFileLevel: error
 
 # Repository
 automerge: true
