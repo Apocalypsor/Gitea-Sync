@@ -26,3 +26,4 @@ jobs:
           RENOVATE_CONFIG_FILE: /tmp/config.yaml
           RENOVATE_GIT_PRIVATE_KEY: ${{ secrets.RENOVATE_GIT_PRIVATE_KEY }}
           LOG_LEVEL: ERROR
+          GITHUB_COM_TOKEN: ${{ secrets.GH_TOKEN }}
