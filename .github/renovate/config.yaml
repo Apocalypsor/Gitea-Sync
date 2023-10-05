@@ -15,3 +15,5 @@ hostRules:
 lockFileMaintenance:
   enabled: true
 platformAutomerge: true
+ignoreDeps:
+  - python
