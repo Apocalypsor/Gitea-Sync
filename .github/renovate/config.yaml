@@ -17,3 +17,4 @@ lockFileMaintenance:
 platformAutomerge: true
 ignoreDeps:
   - python
+  - node
