@@ -14,7 +14,7 @@ jobs:
       - name: Load config
         run: curl https://raw.githubusercontent.com/Apocalypsor/Gitea-Sync/main/.github/renovate/config.yaml > /tmp/config.yaml
       - name: Self-hosted Renovate
-        run: renovate
+        run: renovate || echo "failed"
         env:
           RENOVATE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
           RENOVATE_USERNAME: ${{ secrets.RENOVATE_USERNAME }}
