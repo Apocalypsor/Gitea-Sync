@@ -1,6 +1,6 @@
 # Self-hosted
 autodiscover: true
-autodiscoverFilter: "!/.*Mirror/.+/"
+autodiscoverFilter: "/dov/Surgio-Config/"
 logFileLevel: error
 
 # Repository

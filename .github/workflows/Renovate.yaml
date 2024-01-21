@@ -9,7 +9,7 @@ on:
 jobs:
   renovate:
     runs-on: ubuntu-latest
-    container: renovate/renovate:37.133.1
+    container: renovate/renovate:latest
     steps:
       - name: Load config
         run: curl https://raw.githubusercontent.com/Apocalypsor/Gitea-Sync/main/.github/renovate/config.yaml > /tmp/config.yaml
@@ -23,5 +23,5 @@ jobs:
           RENOVATE_GIT_URL: endpoint
           RENOVATE_CONFIG_FILE: /tmp/config.yaml
           RENOVATE_GIT_PRIVATE_KEY: ${{ secrets.RENOVATE_GIT_PRIVATE_KEY }}
-          LOG_LEVEL: ERROR
+          LOG_LEVEL: debug
           GITHUB_COM_TOKEN: ${{ secrets.GH_TOKEN }}
