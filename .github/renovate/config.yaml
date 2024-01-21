@@ -8,7 +8,6 @@ automerge: true
 commitBodyTable: true
 configMigration: true
 dependencyDashboard: true
-gitLabIgnoreApprovals: true
 
 hostRules:
   - enableHttp2: true
