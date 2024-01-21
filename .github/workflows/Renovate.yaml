@@ -9,7 +9,7 @@ on:
 jobs:
   renovate:
     runs-on: ubuntu-latest
-    container: renovate/renovate:37.134.0
+    container: renovate/renovate:37.133.1
     steps:
       - name: Load config
         run: curl https://raw.githubusercontent.com/Apocalypsor/Gitea-Sync/main/.github/renovate/config.yaml > /tmp/config.yaml
