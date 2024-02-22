@@ -73,3 +73,15 @@ class Tea:
         )
 
         return res.status_code == 204
+
+    def unwatchMirrors(self):
+        repos = self.getRepos()
+
+        for repo in repos:
+            res = requests.delete(
+                self.url + f"/api/v1/repos/{self.org_name}/{repo['name']}/subscription",
+                headers=self.headers,
+            )
+
+            if res.status_code != 204:
+                print(f"[-] Failed to unwatch {repo['name']}")

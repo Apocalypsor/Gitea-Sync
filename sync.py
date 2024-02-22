@@ -77,3 +77,8 @@ for i in del_index:
         print(f"[+] {ds_repos[i]['name']} deleted successfully.")
     else:
         print(f"[-] {ds_repos[i]['name']} failed to delete.")
+
+print(f"[+] Unwatch mirror repos...")
+tea_api.unwatchMirrors()
+
+print("[+] Done.")
