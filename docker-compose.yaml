@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  gitea-sync:
+    build: .
+    container_name: gitea-sync
+    environment:
+      - GH_USERNAME=
+      - GH_TOKEN=
+      - TEA_URL=
+      - TEA_TOKEN=
+      - TEA_ORG=

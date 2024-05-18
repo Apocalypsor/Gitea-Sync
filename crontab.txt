@@ -1,0 +1,1 @@
+0 * * * * cd /usr/src/app && python sync.py > /dev/stdout 2>&1
