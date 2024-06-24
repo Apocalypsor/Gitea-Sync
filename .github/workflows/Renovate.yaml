@@ -2,7 +2,7 @@ name: Renovate
 
 on:
   schedule:
-    - cron: 07 */3 * * *
+    - cron: 07 */6 * * *
 
   workflow_dispatch:
 
