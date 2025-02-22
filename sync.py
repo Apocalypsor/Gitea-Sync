@@ -24,6 +24,7 @@ while True:
         username=gh_username, type="owner", page=page
     )
     if gh_repo:
+        gh_repo = [repo for repo in gh_repo if not repo.archived]
         gh_repos += gh_repo
         page += 1
     else:
