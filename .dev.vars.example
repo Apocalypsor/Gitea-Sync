@@ -1,0 +1,7 @@
+GH_USERNAME=your-github-username
+GH_TOKEN=your-github-token
+TEA_URL=https://gitea.example.com
+TEA_TOKEN=your-gitea-token
+TEA_ORG=your-gitea-org
+# Optional: protect POST /sync
+SYNC_TRIGGER_TOKEN=your-random-token
