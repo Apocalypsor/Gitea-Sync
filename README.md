@@ -26,6 +26,8 @@ Set all runtime values as Worker secrets (do not commit values in `wrangler.json
 - `TEA_TOKEN`
 - `TEA_ORG`
 - `SYNC_TRIGGER_TOKEN` (optional)
+- `WORKER_NAME` is configured in `wrangler.jsonc` for structured observability logs
+- `OBS_SERVICE` service binding is required and configured in `wrangler.jsonc`
 
 Example:
 

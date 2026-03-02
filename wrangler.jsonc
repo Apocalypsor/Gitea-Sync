@@ -9,8 +9,21 @@
 	"compatibility_date": "2026-02-25",
 	"observability": {
 		"enabled": true,
+		"head_sampling_rate": 1,
+		"logs": {
+			"invocation_logs": true,
+		},
 	},
 	"compatibility_flags": ["nodejs_compat"],
+	"vars": {
+		"WORKER_NAME": "gitea-sync",
+	},
+	"services": [
+		{
+			"binding": "OBS_SERVICE",
+			"service": "workers-observability-hub",
+		},
+	],
 	"triggers": {
 		"crons": ["0 * * * *"],
 	},

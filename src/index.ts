@@ -1,11 +1,10 @@
-interface WorkerEnv {
-	GH_USERNAME: string;
-	GH_TOKEN: string;
-	TEA_URL: string;
-	TEA_TOKEN: string;
-	TEA_ORG: string;
-	SYNC_TRIGGER_TOKEN?: string;
-}
+import {
+	logError,
+	logInfo,
+	logWarn,
+	reportErrorToObservability,
+} from './observability';
+import type { Env } from './types';
 
 interface SourceRepo {
 	name: string;
@@ -32,8 +31,9 @@ interface SyncSummary {
 }
 
 const GITHUB_API_BASE = 'https://api.github.com';
+const RESPONSE_BODY_SNIPPET_LIMIT = 4000;
 
-function githubHeaders(env: WorkerEnv): HeadersInit {
+function githubHeaders(env: Env): HeadersInit {
 	return {
 		Authorization: `Bearer ${env.GH_TOKEN}`,
 		Accept: 'application/vnd.github+json',
@@ -42,15 +42,15 @@ function githubHeaders(env: WorkerEnv): HeadersInit {
 	};
 }
 
-function assertEnv(env: WorkerEnv): void {
-	const required: Array<keyof WorkerEnv> = ['GH_USERNAME', 'GH_TOKEN', 'TEA_URL', 'TEA_TOKEN', 'TEA_ORG'];
+function assertEnv(env: Env): void {
+	const required: Array<keyof Env> = ['GH_USERNAME', 'GH_TOKEN', 'TEA_URL', 'TEA_TOKEN', 'TEA_ORG'];
 	const missing = required.filter((key) => !env[key]);
 	if (missing.length > 0) {
 		throw new Error(`Missing required env vars: ${missing.join(', ')}`);
 	}
 }
 
-async function fetchGithubRepos(env: WorkerEnv): Promise<SourceRepo[]> {
+async function fetchGithubRepos(env: Env): Promise<SourceRepo[]> {
 	const repos: SourceRepo[] = [];
 	let page = 1;
 
@@ -64,7 +64,8 @@ async function fetchGithubRepos(env: WorkerEnv): Promise<SourceRepo[]> {
 			headers: githubHeaders(env),
 		});
 		if (!res.ok) {
-			throw new Error(`GitHub list repos failed: ${res.status} ${await res.text()}`);
+			const responseBody = await readResponseBodySnippet(res);
+			throw new Error(`GitHub list repos failed: ${res.status} ${responseBody}`);
 		}
 
 		const data = (await res.json()) as Array<{
@@ -99,7 +100,7 @@ async function fetchGithubRepos(env: WorkerEnv): Promise<SourceRepo[]> {
 	return repos;
 }
 
-function teaHeaders(env: WorkerEnv): HeadersInit {
+function teaHeaders(env: Env): HeadersInit {
 	return {
 		Authorization: `Bearer ${env.TEA_TOKEN}`,
 		'Content-Type': 'application/json',
@@ -107,7 +108,7 @@ function teaHeaders(env: WorkerEnv): HeadersInit {
 	};
 }
 
-async function fetchTeaRepos(env: WorkerEnv): Promise<DestRepo[]> {
+async function fetchTeaRepos(env: Env): Promise<DestRepo[]> {
 	const repos: DestRepo[] = [];
 	let page = 1;
 
@@ -118,7 +119,8 @@ async function fetchTeaRepos(env: WorkerEnv): Promise<DestRepo[]> {
 
 		const res = await fetch(url, { headers: teaHeaders(env) });
 		if (!res.ok) {
-			throw new Error(`Gitea list repos failed: ${res.status} ${await res.text()}`);
+			const responseBody = await readResponseBodySnippet(res);
+			throw new Error(`Gitea list repos failed: ${res.status} ${responseBody}`);
 		}
 
 		const data = (await res.json()) as Array<{
@@ -145,7 +147,7 @@ async function fetchTeaRepos(env: WorkerEnv): Promise<DestRepo[]> {
 	return repos;
 }
 
-async function createMirror(env: WorkerEnv, repo: SourceRepo): Promise<boolean> {
+async function createMirror(env: Env, repo: SourceRepo): Promise<boolean> {
 	const res = await fetch(`${env.TEA_URL.replace(/\/$/, '')}/api/v1/repos/migrate`, {
 		method: 'POST',
 		headers: teaHeaders(env),
@@ -167,14 +169,19 @@ async function createMirror(env: WorkerEnv, repo: SourceRepo): Promise<boolean> 
 	});
 
 	if (!res.ok) {
-		console.error(`Failed to create ${repo.name}: ${res.status} ${await res.text()}`);
+		const responseBody = await readResponseBodySnippet(res);
+		logError(env, 'sync.create_mirror_failed', {
+			repo: repo.name,
+			status: res.status,
+			response_body: responseBody,
+		});
 		return false;
 	}
 
 	return true;
 }
 
-async function deleteMirror(env: WorkerEnv, repoName: string): Promise<boolean> {
+async function deleteMirror(env: Env, repoName: string): Promise<boolean> {
 	const res = await fetch(
 		`${env.TEA_URL.replace(/\/$/, '')}/api/v1/repos/${encodeURIComponent(env.TEA_ORG)}/${encodeURIComponent(repoName)}`,
 		{
@@ -182,10 +189,21 @@ async function deleteMirror(env: WorkerEnv, repoName: string): Promise<boolean> 
 			headers: teaHeaders(env),
 		},
 	);
-	return res.status === 204;
+
+	if (res.status !== 204) {
+		const responseBody = await readResponseBodySnippet(res);
+		logError(env, 'sync.delete_mirror_failed', {
+			repo: repoName,
+			status: res.status,
+			response_body: responseBody,
+		});
+		return false;
+	}
+
+	return true;
 }
 
-async function unwatchMirrors(env: WorkerEnv, repos: DestRepo[]): Promise<string[]> {
+async function unwatchMirrors(env: Env, repos: DestRepo[]): Promise<string[]> {
 	const failed: string[] = [];
 
 	for (const repo of repos) {
@@ -198,13 +216,19 @@ async function unwatchMirrors(env: WorkerEnv, repos: DestRepo[]): Promise<string
 		);
 		if (res.status !== 204) {
 			failed.push(repo.name);
+			const responseBody = await readResponseBodySnippet(res);
+			logWarn(env, 'sync.unwatch_failed', {
+				repo: repo.name,
+				status: res.status,
+				response_body: responseBody,
+			});
 		}
 	}
 
 	return failed;
 }
 
-async function syncRepos(env: WorkerEnv): Promise<SyncSummary> {
+async function syncRepos(env: Env): Promise<SyncSummary> {
 	assertEnv(env);
 	const sourceRepos = await fetchGithubRepos(env);
 	const destinationRepos = await fetchTeaRepos(env);
@@ -253,7 +277,7 @@ async function syncRepos(env: WorkerEnv): Promise<SyncSummary> {
 	};
 }
 
-function isAuthorized(request: Request, env: WorkerEnv): boolean {
+function isAuthorized(request: Request, env: Env): boolean {
 	if (!env.SYNC_TRIGGER_TOKEN) {
 		return true;
 	}
@@ -261,14 +285,64 @@ function isAuthorized(request: Request, env: WorkerEnv): boolean {
 	return auth === `Bearer ${env.SYNC_TRIGGER_TOKEN}`;
 }
 
+async function runSyncWithObservability(env: Env, trigger: 'manual' | 'scheduled'): Promise<SyncSummary> {
+	const startedAt = Date.now();
+	logInfo(env, 'sync.started', { trigger });
+	try {
+		const summary = await syncRepos(env);
+		logInfo(env, 'sync.completed', {
+			trigger,
+			duration_ms: Date.now() - startedAt,
+			source_count: summary.sourceCount,
+			destination_count: summary.destinationCount,
+			created_count: summary.created.length,
+			creation_failed_count: summary.creationFailed.length,
+			deleted_count: summary.deleted.length,
+			deletion_failed_count: summary.deletionFailed.length,
+			unwatch_failed_count: summary.unwatchFailed.length,
+		});
+
+		if (summary.creationFailed.length > 0) {
+			logWarn(env, 'sync.creation_failed_repositories', { repos: summary.creationFailed });
+		}
+		if (summary.deletionFailed.length > 0) {
+			logWarn(env, 'sync.deletion_failed_repositories', { repos: summary.deletionFailed });
+		}
+		if (summary.unwatchFailed.length > 0) {
+			logWarn(env, 'sync.unwatch_failed_repositories', { repos: summary.unwatchFailed });
+		}
+
+		return summary;
+	} catch (error: unknown) {
+		await reportErrorToObservability(env, 'sync.failed', error, {
+			trigger,
+			duration_ms: Date.now() - startedAt,
+		});
+		throw error;
+	}
+}
+
+async function readResponseBodySnippet(response: Response): Promise<string> {
+	try {
+		const text = await response.text();
+		if (!text) {
+			return '<empty response body>';
+		}
+		if (text.length <= RESPONSE_BODY_SNIPPET_LIMIT) {
+			return text;
+		}
+		return `${text.slice(0, RESPONSE_BODY_SNIPPET_LIMIT)}...<truncated>`;
+	} catch (error: unknown) {
+		return `failed to read response body: ${error instanceof Error ? error.message : String(error)}`;
+	}
+}
+
 export default {
-	async scheduled(_controller, env): Promise<void> {
-		const summary = await syncRepos(env as WorkerEnv);
-		console.log(`Sync completed: ${JSON.stringify(summary)}`);
+	async scheduled(_controller, env: Env): Promise<void> {
+		await runSyncWithObservability(env, 'scheduled');
 	},
 
-	async fetch(request, env): Promise<Response> {
-		const workerEnv = env as WorkerEnv;
+	async fetch(request: Request, workerEnv: Env): Promise<Response> {
 		const url = new URL(request.url);
 
 		if (request.method === 'GET' && url.pathname === '/health') {
@@ -277,13 +351,16 @@ export default {
 
 		if (request.method === 'POST' && url.pathname === '/sync') {
 			if (!isAuthorized(request, workerEnv)) {
+				logWarn(workerEnv, 'http.sync_unauthorized', {
+					method: request.method,
+					pathname: url.pathname,
+				});
 				return new Response('Unauthorized', { status: 401 });
 			}
 			try {
-				const summary = await syncRepos(workerEnv);
+				const summary = await runSyncWithObservability(workerEnv, 'manual');
 				return Response.json({ ok: true, summary });
-			} catch (error) {
-				console.error(error);
+			} catch (error: unknown) {
 				const message = error instanceof Error ? error.message : 'Unknown error';
 				return Response.json({ ok: false, error: message }, { status: 500 });
 			}
