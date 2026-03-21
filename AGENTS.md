@@ -1,34 +1,48 @@
-# Cloudflare Workers
+# Gitea-Sync Worker
 
-STOP. Your knowledge of Cloudflare Workers APIs and limits may be outdated. Always retrieve current documentation before any Workers, KV, R2, D1, Durable Objects, Queues, Vectorize, AI, or Agents SDK task.
+## Overview
+
+Cloudflare Worker that mirrors GitHub repos to Gitea on an hourly cron. Entry point is `src/index.ts`.
 
 ## Docs
 
-- https://developers.cloudflare.com/workers/
-- MCP: `https://docs.mcp.cloudflare.com/mcp`
+- Cloudflare Workers: <https://developers.cloudflare.com/workers/>
+- Gitea API: refer to the target instance's `/api/swagger`
+- MCP: <https://docs.mcp.cloudflare.com/mcp>
 
-For all limits and quotas, retrieve from the product's `/platform/limits/` page. eg. `/workers/platform/limits`
+STOP. Your knowledge of Cloudflare Workers APIs and limits may be outdated. Always retrieve current documentation before any Workers task.
 
 ## Commands
 
-| Command | Purpose |
-|---------|---------|
-| `npx wrangler dev` | Local development |
-| `npx wrangler deploy` | Deploy to Cloudflare |
-| `npx wrangler types` | Generate TypeScript types |
+| Command                           | Purpose                                      |
+| --------------------------------- | -------------------------------------------- |
+| `npm run dev`                     | Local development (`wrangler dev`)           |
+| `npm run dev -- --test-scheduled` | Test cron trigger locally                    |
+| `npm run test`                    | Run tests (`vitest`)                         |
+| `npm run deploy`                  | Deploy to Cloudflare (`wrangler deploy`)     |
+| `npm run cf-typegen`              | Generate TypeScript types (`wrangler types`) |
 
-Run `wrangler types` after changing bindings in wrangler.jsonc.
+Run `npm run cf-typegen` after changing bindings in `wrangler.jsonc`.
+
+## Architecture
+
+- `src/index.ts` — Worker entry point with `fetch` and `scheduled` handlers, plus all sync logic (GitHub fetch, Gitea mirror CRUD, unwatch).
+- `src/observability.ts` — Structured logging (`logInfo`, `logWarn`, `logError`) and error forwarding to `OBS_SERVICE` binding.
+- `src/types.ts` — `Env` interface and observability payload types.
+
+## Key Patterns
+
+- All secrets (`GH_TOKEN`, `TEA_TOKEN`, etc.) come from Worker secrets, not `wrangler.jsonc` vars.
+- The `OBS_SERVICE` service binding connects to `workers-observability-hub` for error reporting.
+- GitHub API pagination uses `per_page=100`; Gitea uses `limit=50`.
+- Mirror creation uses Gitea's `/repos/migrate` endpoint with `mirror: true`.
+- Response bodies are truncated to 4000 chars in error logs.
 
 ## Node.js Compatibility
 
-https://developers.cloudflare.com/workers/runtime-apis/nodejs/
+`nodejs_compat` flag is enabled. Reference: <https://developers.cloudflare.com/workers/runtime-apis/nodejs/>
 
 ## Errors
 
 - **Error 1102** (CPU/Memory exceeded): Retrieve limits from `/workers/platform/limits/`
-- **All errors**: https://developers.cloudflare.com/workers/observability/errors/
-
-## Product Docs
-
-Retrieve API references and limits from:
-`/kv/` · `/r2/` · `/d1/` · `/durable-objects/` · `/queues/` · `/vectorize/` · `/workers-ai/` · `/agents/`
+- **All errors**: <https://developers.cloudflare.com/workers/observability/errors/>
