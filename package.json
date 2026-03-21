@@ -13,13 +13,13 @@
 		"skills:update": "bunx skills update"
 	},
 	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "^0.12.4",
+		"@cloudflare/vitest-pool-workers": "^0.13.3",
 		"@types/node": "^25.3.0",
 		"husky": "^9.1.7",
 		"prettier": "^3.8.1",
 		"typescript": "^5.5.2",
 		"vitest": "~3.2.0",
-		"wrangler": "^4.68.1"
+		"wrangler": "^4.76.0"
 	},
 	"lint-staged": {
 		"*.{ts,tsx}": "prettier --write",
