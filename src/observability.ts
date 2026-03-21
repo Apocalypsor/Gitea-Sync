@@ -15,12 +15,7 @@ export function logError(env: Env, event: string, context: LogContext = {}): voi
 	emitStructuredLog('error', env, event, context);
 }
 
-export async function reportErrorToObservability(
-	env: Env,
-	event: string,
-	error: unknown,
-	context: LogContext = {},
-): Promise<void> {
+export async function reportErrorToObservability(env: Env, event: string, error: unknown, context: LogContext = {}): Promise<void> {
 	const payload: ObservabilityErrorPayload = {
 		source: resolveWorkerName(env),
 		event,

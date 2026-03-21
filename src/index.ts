@@ -1,9 +1,4 @@
-import {
-	logError,
-	logInfo,
-	logWarn,
-	reportErrorToObservability,
-} from './observability';
+import { logError, logInfo, logWarn, reportErrorToObservability } from './observability';
 import type { Env } from './types';
 
 interface SourceRepo {
