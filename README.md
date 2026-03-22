@@ -54,9 +54,9 @@ For local dev, copy `.dev.vars.example` to `.dev.vars` and fill real values.
 ## Development
 
 ```bash
-npm run dev              # start local dev server
-npm run dev -- --test-scheduled  # test cron trigger locally
-npm run test             # run tests with vitest
+pnpm run dev              # start local dev server
+pnpm run dev -- --test-scheduled  # test cron trigger locally
+pnpm run test             # run tests with vitest
 ```
 
 Manual trigger:
@@ -69,7 +69,7 @@ curl http://localhost:8787/health
 ## Deploy
 
 ```bash
-npm run deploy
+pnpm run deploy
 ```
 
 ## Project Structure

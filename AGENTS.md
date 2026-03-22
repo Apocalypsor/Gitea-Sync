@@ -14,15 +14,15 @@ STOP. Your knowledge of Cloudflare Workers APIs and limits may be outdated. Alwa
 
 ## Commands
 
-| Command                           | Purpose                                      |
-| --------------------------------- | -------------------------------------------- |
-| `npm run dev`                     | Local development (`wrangler dev`)           |
-| `npm run dev -- --test-scheduled` | Test cron trigger locally                    |
-| `npm run test`                    | Run tests (`vitest`)                         |
-| `npm run deploy`                  | Deploy to Cloudflare (`wrangler deploy`)     |
-| `npm run cf-typegen`              | Generate TypeScript types (`wrangler types`) |
+| Command                            | Purpose                                      |
+| ---------------------------------- | -------------------------------------------- |
+| `pnpm run dev`                     | Local development (`wrangler dev`)           |
+| `pnpm run dev -- --test-scheduled` | Test cron trigger locally                    |
+| `pnpm run test`                    | Run tests (`vitest`)                         |
+| `pnpm run deploy`                  | Deploy to Cloudflare (`wrangler deploy`)     |
+| `pnpm run cf-typegen`              | Generate TypeScript types (`wrangler types`) |
 
-Run `npm run cf-typegen` after changing bindings in `wrangler.jsonc`.
+Run `pnpm run cf-typegen` after changing bindings in `wrangler.jsonc`.
 
 ## Architecture
 
